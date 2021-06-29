@@ -1,10 +1,9 @@
 'use strict'
 
-import * as vscode from 'vscode'
-import * as path from 'path'
-import { EOL } from 'os'
-import { copy } from 'copy-paste'
 import * as leftPad from 'left-pad'
+import { EOL } from 'os'
+import * as path from 'path'
+import * as vscode from 'vscode'
 
 const COPY_WITH_LINE_NUMBERS = 'extension.copyWithLineNumbers'
 const COPY_WITH_LINE_NUMBERS_WITHOUT_PATH = COPY_WITH_LINE_NUMBERS + '.withoutPath'
@@ -52,11 +51,12 @@ function copyWithLineNumbers(option?) {
   const lastSelection = selections[selections.length - 1]
   const largestLineNumber = lastSelection.end.line + 1
   const largestLineNumberLength = largestLineNumber.toString().length
-
+  let copiedLineCount = 0
   selections.forEach((selection, i) => {
     if (i > 0) str += `${MULTI_SELECTION_SEPARATOR}${EOL}`
 
     for (let n = selection.start.line; n <= selection.end.line; n += 1) {
+      copiedLineCount = copiedLineCount + 1
       const number = leftPad(n + 1, largestLineNumberLength, 0)
       const line = document.lineAt(n).text
 
@@ -64,9 +64,9 @@ function copyWithLineNumbers(option?) {
     }
   })
 
-  copy(str, () => {
+  vscode.env.clipboard.writeText(str).then( () => {
     const showSuccessMessage = vscode.workspace.getConfiguration('copyWithLineNumbers').get('showSuccessMessage')
-    if (showSuccessMessage) vscode.window.showInformationMessage('Copied!')
+    if (showSuccessMessage) vscode.window.showInformationMessage(copiedLineCount + ' lines copied!')
   })
 }
 
